@@ -20,6 +20,13 @@ woman_navigation_kb = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="🌷З
                                           input_field_placeholder='Листайте каталог за допомогою стрілочок...')
 
 
+skip_photo_kb = ReplyKeyboardMarkup(
+    keyboard=[[KeyboardButton(text="Пропустити")]],
+    resize_keyboard=True
+)
+
+
+
 @router.message(CommandStart())
 async def cmd_start(message: Message):
     await message.answer('Вітаємо Вас у нашому магазині <b>SecondWave Wear</b>🌊\n\n '
@@ -160,6 +167,30 @@ async def order_item_woman(message: Message):
         await message.answer("Не вдалося знайти інформацію про обраний товар.")
 
 
+
+#@@@@@@Оновлений код знизу@@@@@@@
+
+
+
+async def save_cloth_to_db(state: FSMContext, cloth_model):
+    data = await state.get_data()
+    async with async_session() as session:
+        new_cloth = cloth_model(
+            бренд=data.get('бренд'),
+            розмір=data.get('розмір'),
+            вартість=data.get('вартість'),
+            стан=data.get('стан'),
+            фото1=data.get('фото1'),
+            фото2=data.get('фото2'),
+            фото3=data.get('фото3'),
+            фото4=data.get('фото4'),
+            фото5=data.get('фото5'),
+            tg_link=data.get('tg_link')
+        )
+        session.add(new_cloth)
+        await session.commit()
+
+
 @router.message(Command('add_cloth_to_my_DB'))
 async def add_cloth(message: Message):
     await message.answer("Оберіть стать до якої ви хочете додати річ:",reply_markup=kb.sex_admin)
@@ -193,10 +224,157 @@ async def add_cost(message: Message, state: FSMContext):
 
 
 @router.message(AddCloth_Man.стан)
-async def add_stan(message: Message, state: FSMContext):
+async def add_cost(message: Message, state: FSMContext):
     await state.update_data(стан=message.text)
+    await state.set_state(AddCloth_Man.фото1)
+    await message.answer("Надішліть перше фото одягу:")
+
+
+@router.message(AddCloth_Man.фото1, F.photo)
+async def add_photo1(message: Message, state: FSMContext):
+    await state.update_data(фото1=message.photo[-1].file_id)
+    await state.set_state(AddCloth_Man.фото2)
+    await message.answer("Надішліть друге фото (або натисніть 'Пропустити' для завершення):",reply_markup=skip_photo_kb)
+
+
+@router.message(AddCloth_Man.фото2, F.photo)
+async def add_photo2(message: Message, state: FSMContext):
+    await state.update_data(фото2=message.photo[-1].file_id)
+    await state.set_state(AddCloth_Man.фото3)
+    await message.answer("Надішліть третє фото (або натисніть 'Пропустити' для завершення):",reply_markup=skip_photo_kb)
+
+
+@router.message(AddCloth_Man.фото3, F.photo)
+async def add_photo3(message: Message, state: FSMContext):
+    await state.update_data(фото3=message.photo[-1].file_id)
+    await state.set_state(AddCloth_Man.фото4)
+    await message.answer("Надішліть четверте фото (або натисніть 'Пропустити' для завершення):",reply_markup=skip_photo_kb)
+
+
+@router.message(AddCloth_Man.фото4, F.photo)
+async def add_photo4(message: Message, state: FSMContext):
+    await state.update_data(фото4=message.photo[-1].file_id)
+    await state.set_state(AddCloth_Man.фото5)
+    await message.answer("Надішліть п'яте фото (або натисніть 'Пропустити' для завершення):",reply_markup=skip_photo_kb)
+
+
+@router.message(AddCloth_Man.фото5, F.photo)
+async def add_photo5(message: Message, state: FSMContext):
+    await state.update_data(фото5=message.photo[-1].file_id)
     await state.set_state(AddCloth_Man.tg_link)
-    await message.answer("Введіть tg_link продавця:")
+    await message.answer("Введіть tg_link продавця:",reply_markup=ReplyKeyboardRemove())
 
 
-#Додати функцію яка приймає фото і функцію яка заносить цю річ у бд
+@router.message(AddCloth_Man.tg_link)
+async def add_tg_link(message: Message, state: FSMContext):
+    await state.update_data(tg_link=message.text)
+    await save_cloth_to_db(state, ManCloth)
+    await state.clear()
+    await message.answer("Чоловічий одяг успішно додано до бази даних.", reply_markup=kb.menu)
+
+@router.message(F.text == 'add_woman_cloth')
+async def set_state(message: Message, state: FSMContext):
+    await state.set_state(AddCloth_Woman.бренд)
+    await message.answer("Введіть назву бренду:")
+
+
+@router.message(AddCloth_Woman.бренд)
+async def add_brand(message: Message, state: FSMContext):
+    await state.update_data(бренд=message.text)
+    await state.set_state(AddCloth_Woman.розмір)
+    await message.answer("Введіть розмір одягу:")
+
+
+@router.message(AddCloth_Woman.розмір)
+async def add_size(message: Message, state: FSMContext):
+    await state.update_data(розмір=message.text)
+    await state.set_state(AddCloth_Woman.вартість)
+    await message.answer("Введіть вартість одягу:")
+
+
+@router.message(AddCloth_Woman.вартість)
+async def add_cost(message: Message, state: FSMContext):
+    await state.update_data(вартість=message.text)
+    await state.set_state(AddCloth_Woman.стан)
+    await message.answer("Введіть стан одягу:")
+
+
+@router.message(AddCloth_Woman.стан)
+async def add_cost(message: Message, state: FSMContext):
+    await state.update_data(стан=message.text)
+    await state.set_state(AddCloth_Woman.фото1)
+    await message.answer("Надішліть перше фото одягу:")
+
+
+@router.message(AddCloth_Woman.фото1, F.photo)
+async def add_photo1(message: Message, state: FSMContext):
+    await state.update_data(фото1=message.photo[-1].file_id)
+    await state.set_state(AddCloth_Woman.фото2)
+    await message.answer("Надішліть друге фото (або натисніть 'Пропустити' для завершення):",reply_markup=skip_photo_kb)
+
+
+@router.message(AddCloth_Woman.фото2, F.photo)
+async def add_photo2(message: Message, state: FSMContext):
+    await state.update_data(фото2=message.photo[-1].file_id)
+    await state.set_state(AddCloth_Woman.фото3)
+    await message.answer("Надішліть третє фото (або натисніть 'Пропустити' для завершення):",reply_markup=skip_photo_kb)
+
+
+@router.message(AddCloth_Woman.фото3, F.photo)
+async def add_photo3(message: Message, state: FSMContext):
+    await state.update_data(фото3=message.photo[-1].file_id)
+    await state.set_state(AddCloth_Woman.фото4)
+    await message.answer("Надішліть четверте фото (або натисніть 'Пропустити' для завершення):",reply_markup=skip_photo_kb)
+
+
+@router.message(AddCloth_Woman.фото4, F.photo)
+async def add_photo4(message: Message, state: FSMContext):
+    await state.update_data(фото4=message.photo[-1].file_id)
+    await state.set_state(AddCloth_Woman.фото5)
+    await message.answer("Надішліть п'яте фото (або натисніть 'Пропустити' для завершення):",reply_markup=skip_photo_kb)
+
+
+@router.message(AddCloth_Woman.фото5, F.photo)
+async def add_photo5(message: Message, state: FSMContext):
+    await state.update_data(фото5=message.photo[-1].file_id)
+    await state.set_state(AddCloth_Woman.tg_link)
+    await message.answer("Введіть tg_link продавця:",reply_markup=ReplyKeyboardRemove())
+
+
+@router.message(AddCloth_Woman.tg_link)
+async def add_tg_link(message: Message, state: FSMContext):
+    await state.update_data(tg_link=message.text)
+    await save_cloth_to_db(state, WomanCloth)
+    await state.clear()
+    await message.answer("Жіночий одяг успішно додано до бази даних.", reply_markup=kb.menu)
+
+
+@router.message(F.text == 'Пропустити')
+async def skip_photo(message: Message, state: FSMContext):
+    user_state = await state.get_state()
+    if user_state == AddCloth_Man.фото2:
+        await state.set_state(AddCloth_Man.фото3)
+        await message.answer("Надішліть третє фото (або натисніть 'Пропустити' для завершення):", reply_markup=skip_photo_kb)
+    elif user_state == AddCloth_Man.фото3:
+        await state.set_state(AddCloth_Man.фото4)
+        await message.answer("Надішліть четверте фото (або натисніть 'Пропустити' для завершення):", reply_markup=skip_photo_kb)
+    elif user_state == AddCloth_Man.фото4:
+        await state.set_state(AddCloth_Man.фото5)
+        await message.answer("Надішліть п'яте фото (або натисніть 'Пропустити' для завершення):", reply_markup=skip_photo_kb)
+    elif user_state == AddCloth_Man.фото5:
+        await state.set_state(AddCloth_Man.tg_link)
+        await message.answer("Введіть tg_link продавця:", reply_markup=ReplyKeyboardRemove())
+
+    elif user_state == AddCloth_Woman.фото2:
+        await state.set_state(AddCloth_Woman.фото3)
+        await message.answer("Надішліть третє фото (або натисніть 'Пропустити' для завершення):", reply_markup=skip_photo_kb)
+    elif user_state == AddCloth_Woman.фото3:
+        await state.set_state(AddCloth_Woman.фото4)
+        await message.answer("Надішліть четверте фото (або натисніть 'Пропустити' для завершення):", reply_markup=skip_photo_kb)
+    elif user_state == AddCloth_Woman.фото4:
+        await state.set_state(AddCloth_Woman.фото5)
+        await message.answer("Надішліть п'яте фото (або натисніть 'Пропустити' для завершення):", reply_markup=skip_photo_kb)
+    elif user_state == AddCloth_Woman.фото5:
+        await state.set_state(AddCloth_Woman.tg_link)
+        await message.answer("Введіть tg_link продавця:", reply_markup=ReplyKeyboardRemove())
+

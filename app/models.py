@@ -12,7 +12,11 @@ class AddCloth_Man(StatesGroup):
     розмір = State()
     вартість = State()
     стан = State()
-    фото = State()
+    фото1 = State()
+    фото2 = State()
+    фото3 = State()
+    фото4 = State()
+    фото5 = State()
     tg_link = State()
 
 
@@ -21,9 +25,12 @@ class AddCloth_Woman(StatesGroup):
     розмір = State()
     вартість = State()
     стан = State()
-    фото = State()
+    фото1 = State()
+    фото2 = State()
+    фото3 = State()
+    фото4 = State()
+    фото5 = State()
     tg_link = State()
-
 
 class Base(AsyncAttrs, DeclarativeBase):
     pass
@@ -32,7 +39,7 @@ class Base(AsyncAttrs, DeclarativeBase):
 class ManCloth(Base):
     __tablename__ = 'чоловічий_одяг'
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     бренд: Mapped[str] = mapped_column(String, nullable=False)
     розмір: Mapped[str] = mapped_column(String, nullable=False)
     вартість: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -48,7 +55,7 @@ class ManCloth(Base):
 class WomanCloth(Base):
     __tablename__ = 'жіночий_одяг'
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     бренд: Mapped[str] = mapped_column(String, nullable=False)
     розмір: Mapped[str] = mapped_column(String, nullable=False)
     вартість: Mapped[int] = mapped_column(Integer, nullable=False)
