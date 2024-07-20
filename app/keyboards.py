@@ -14,3 +14,6 @@ back = InlineKeyboardMarkup(inline_keyboard = [[InlineKeyboardButton (text='На
 sex = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='Чоловічий♂️', callback_data='man'),
      InlineKeyboardButton(text='Жіночий♀️', callback_data='woman')]])
+
+sex_admin = ReplyKeyboardMarkup(keyboard=[KeyboardButton(text='add_man_cloth'),
+                                          [KeyboardButton(text='add_woman_cloth')]],resize_keyboard=True,)

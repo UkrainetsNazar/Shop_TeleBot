@@ -1,11 +1,11 @@
 import app.keyboards as kb
-from app.models import async_session, WomanCloth, ManCloth
+from app.models import async_session, WomanCloth, ManCloth, AddCloth_Man, AddCloth_Woman
 from aiogram import F, Router
 from aiogram.types import (Message, CallbackQuery, ReplyKeyboardMarkup,
                            ReplyKeyboardRemove, KeyboardButton, InputMediaPhoto)
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, Command
 from sqlalchemy import select
-
+from aiogram.fsm.context import FSMContext
 router = Router()
 state = {}
 
@@ -146,6 +146,7 @@ async def order_item(message: Message):
         await message.answer("Не вдалося знайти інформацію про обраний товар.")
 
 
+
 @router.message(F.text == "🌷Замовити🌷")
 async def order_item_woman(message: Message):
     user_state = state.get(message.from_user.id)
@@ -157,3 +158,45 @@ async def order_item_woman(message: Message):
             await message.answer("На жаль, для цієї речі не вказано контактну інформацію.")
     else:
         await message.answer("Не вдалося знайти інформацію про обраний товар.")
+
+
+@router.message(Command('add_cloth_to_my_DB'))
+async def add_cloth(message: Message):
+    await message.answer("Оберіть стать до якої ви хочете додати річ:",reply_markup=kb.sex_admin)
+
+
+@router.message(F.text == 'add_man_cloth')
+async def set_state(message: Message, state: FSMContext):
+    await state.set_state(AddCloth_Man.бренд)
+    await message.answer("Введіть назву бренду:")
+
+
+@router.message(AddCloth_Man.бренд)
+async def add_brand(message: Message, state: FSMContext):
+    await state.update_data(бренд=message.text)
+    await state.set_state(AddCloth_Man.розмір)
+    await message.answer("Введіть розмір одягу:")
+
+
+@router.message(AddCloth_Man.розмір)
+async def add_size(message: Message, state: FSMContext):
+    await state.update_data(розмір=message.text)
+    await state.set_state(AddCloth_Man.вартість)
+    await message.answer("Введіть вартість одягу:")
+
+
+@router.message(AddCloth_Man.вартість)
+async def add_cost(message: Message, state: FSMContext):
+    await state.update_data(вартість=message.text)
+    await state.set_state(AddCloth_Man.стан)
+    await message.answer("Введіть стан одягу:")
+
+
+@router.message(AddCloth_Man.стан)
+async def add_stan(message: Message, state: FSMContext):
+    await state.update_data(стан=message.text)
+    await state.set_state(AddCloth_Man.tg_link)
+    await message.answer("Введіть tg_link продавця:")
+
+
+#Додати функцію яка приймає фото і функцію яка заносить цю річ у бд

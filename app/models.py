@@ -1,10 +1,28 @@
 from sqlalchemy import BigInteger, String, Integer, ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
-
+from aiogram.fsm.state import StatesGroup, State
 engine = create_async_engine(url='sqlite+aiosqlite:///db.sqlite3')
 
 async_session = async_sessionmaker(engine)
+
+
+class AddCloth_Man(StatesGroup):
+    бренд = State()
+    розмір = State()
+    вартість = State()
+    стан = State()
+    фото = State()
+    tg_link = State()
+
+
+class AddCloth_Woman(StatesGroup):
+    бренд = State()
+    розмір = State()
+    вартість = State()
+    стан = State()
+    фото = State()
+    tg_link = State()
 
 
 class Base(AsyncAttrs, DeclarativeBase):
