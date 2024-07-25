@@ -17,3 +17,19 @@ sex = InlineKeyboardMarkup(inline_keyboard=[
 
 sex_admin = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='add_man_cloth'),
                                           KeyboardButton(text='add_woman_cloth')]], resize_keyboard=True)
+
+man_navigation_kb = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="Замовити"), KeyboardButton(text="Далі➡️")],
+                                                  [KeyboardButton(text="Назад")]],
+                                        resize_keyboard=True,
+                                        input_field_placeholder='Листайте каталог за допомогою стрілочок...')
+
+woman_navigation_kb = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="🌷Замовити🌷"), KeyboardButton(text="🌷Далі➡️")],
+                                                    [KeyboardButton(text="Назад")]],
+                                          resize_keyboard=True,
+                                          input_field_placeholder='Листайте каталог за допомогою стрілочок...')
+
+
+skip_photo_kb = ReplyKeyboardMarkup(
+    keyboard=[[KeyboardButton(text="Пропустити")]],
+    resize_keyboard=True
+)

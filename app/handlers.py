@@ -1,30 +1,13 @@
 import app.keyboards as kb
 from app.models import async_session, WomanCloth, ManCloth, AddCloth_Man, AddCloth_Woman
 from aiogram import F, Router
-from aiogram.types import (Message, CallbackQuery, ReplyKeyboardMarkup,
-                           ReplyKeyboardRemove, KeyboardButton, InputMediaPhoto)
+from aiogram.types import (Message, CallbackQuery,
+                           ReplyKeyboardRemove, InputMediaPhoto)
 from aiogram.filters import CommandStart, Command
 from sqlalchemy import select
 from aiogram.fsm.context import FSMContext
 router = Router()
 state = {}
-
-man_navigation_kb = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="Замовити"), KeyboardButton(text="Далі➡️")],
-                                                  [KeyboardButton(text="Назад")]],
-                                        resize_keyboard=True,
-                                        input_field_placeholder='Листайте каталог за допомогою стрілочок...')
-
-woman_navigation_kb = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="🌷Замовити🌷"), KeyboardButton(text="🌷Далі➡️")],
-                                                    [KeyboardButton(text="Назад")]],
-                                          resize_keyboard=True,
-                                          input_field_placeholder='Листайте каталог за допомогою стрілочок...')
-
-
-skip_photo_kb = ReplyKeyboardMarkup(
-    keyboard=[[KeyboardButton(text="Пропустити")]],
-    resize_keyboard=True
-)
-
 
 
 @router.message(CommandStart())
@@ -77,10 +60,10 @@ async def display_item(callback_or_message, item, navigation_kb):
 
     if photos:
         media_group = [InputMediaPhoto(media=photo) for photo in photos]
-        text = f"Бренд: {item.бренд}\nРозмір: {item.розмір}\nВартість: {item.вартість} грн\nСтан: {item.стан}/10\n"
+        text = f"Бренд: {item.бренд}\nРозмір: {item.розмір}\nВартість: {item.вартість}\nСтан: {item.стан}/10\n"
         media_group[0].caption = text
     else:
-        media_group = [InputMediaPhoto(media='', caption=f"Бренд: {item.бренд}\nРозмір: {item.розмір}\nВартість: {item.вартість} грн\nСтан: {item.стан}/10\n")]
+        media_group = [InputMediaPhoto(media='', caption=f"Бренд: {item.бренд}\nРозмір: {item.розмір}\nВартість: {item.вартість}\nСтан: {item.стан}/10\n")]
 
     user_state = state[callback_or_message.from_user.id]
     user_state['current_item'] = item
@@ -126,19 +109,18 @@ async def display_next_item(callback_or_message):
 
     async with async_session() as session:
         if item_type == 'man':
-            result = await session.execute(select(ManCloth).offset(index).limit(1))
+            result = await session.execute(select(ManCloth).order_by(ManCloth.id.desc()).offset(index).limit(1))
             items = result.scalars().all()
-            navigation_kb = man_navigation_kb
+            navigation_kb = kb.man_navigation_kb
         else:
-            result = await session.execute(select(WomanCloth).offset(index).limit(1))
+            result = await session.execute(select(WomanCloth).order_by(WomanCloth.id.desc()).offset(index).limit(1))
             items = result.scalars().all()
-            navigation_kb = woman_navigation_kb
+            navigation_kb = kb.woman_navigation_kb
 
         if items:
             await display_item(callback_or_message, items[0], navigation_kb)
         else:
             await callback_or_message.answer("Немає більше товарів у цій категорії.")
-
 
 @router.message(F.text == "Замовити")
 async def order_item(message: Message):
@@ -153,7 +135,6 @@ async def order_item(message: Message):
         await message.answer("Не вдалося знайти інформацію про обраний товар.")
 
 
-
 @router.message(F.text == "🌷Замовити🌷")
 async def order_item_woman(message: Message):
     user_state = state.get(message.from_user.id)
@@ -165,11 +146,6 @@ async def order_item_woman(message: Message):
             await message.answer("На жаль, для цієї речі не вказано контактну інформацію.")
     else:
         await message.answer("Не вдалося знайти інформацію про обраний товар.")
-
-
-
-#@@@@@@Оновлений код знизу@@@@@@@
-
 
 
 async def save_cloth_to_db(state: FSMContext, cloth_model):
@@ -234,28 +210,28 @@ async def add_cost(message: Message, state: FSMContext):
 async def add_photo1(message: Message, state: FSMContext):
     await state.update_data(фото1=message.photo[-1].file_id)
     await state.set_state(AddCloth_Man.фото2)
-    await message.answer("Надішліть друге фото (або натисніть 'Пропустити' для завершення):",reply_markup=skip_photo_kb)
+    await message.answer("Надішліть друге фото (або натисніть 'Пропустити' для завершення):",reply_markup=kb.skip_photo_kb)
 
 
 @router.message(AddCloth_Man.фото2, F.photo)
 async def add_photo2(message: Message, state: FSMContext):
     await state.update_data(фото2=message.photo[-1].file_id)
     await state.set_state(AddCloth_Man.фото3)
-    await message.answer("Надішліть третє фото (або натисніть 'Пропустити' для завершення):",reply_markup=skip_photo_kb)
+    await message.answer("Надішліть третє фото (або натисніть 'Пропустити' для завершення):",reply_markup=kb.skip_photo_kb)
 
 
 @router.message(AddCloth_Man.фото3, F.photo)
 async def add_photo3(message: Message, state: FSMContext):
     await state.update_data(фото3=message.photo[-1].file_id)
     await state.set_state(AddCloth_Man.фото4)
-    await message.answer("Надішліть четверте фото (або натисніть 'Пропустити' для завершення):",reply_markup=skip_photo_kb)
+    await message.answer("Надішліть четверте фото (або натисніть 'Пропустити' для завершення):",reply_markup=kb.skip_photo_kb)
 
 
 @router.message(AddCloth_Man.фото4, F.photo)
 async def add_photo4(message: Message, state: FSMContext):
     await state.update_data(фото4=message.photo[-1].file_id)
     await state.set_state(AddCloth_Man.фото5)
-    await message.answer("Надішліть п'яте фото (або натисніть 'Пропустити' для завершення):",reply_markup=skip_photo_kb)
+    await message.answer("Надішліть п'яте фото (або натисніть 'Пропустити' для завершення):",reply_markup=kb.skip_photo_kb)
 
 
 @router.message(AddCloth_Man.фото5, F.photo)
@@ -310,28 +286,28 @@ async def add_cost(message: Message, state: FSMContext):
 async def add_photo1(message: Message, state: FSMContext):
     await state.update_data(фото1=message.photo[-1].file_id)
     await state.set_state(AddCloth_Woman.фото2)
-    await message.answer("Надішліть друге фото (або натисніть 'Пропустити' для завершення):",reply_markup=skip_photo_kb)
+    await message.answer("Надішліть друге фото (або натисніть 'Пропустити' для завершення):",reply_markup=kb.skip_photo_kb)
 
 
 @router.message(AddCloth_Woman.фото2, F.photo)
 async def add_photo2(message: Message, state: FSMContext):
     await state.update_data(фото2=message.photo[-1].file_id)
     await state.set_state(AddCloth_Woman.фото3)
-    await message.answer("Надішліть третє фото (або натисніть 'Пропустити' для завершення):",reply_markup=skip_photo_kb)
+    await message.answer("Надішліть третє фото (або натисніть 'Пропустити' для завершення):",reply_markup=kb.skip_photo_kb)
 
 
 @router.message(AddCloth_Woman.фото3, F.photo)
 async def add_photo3(message: Message, state: FSMContext):
     await state.update_data(фото3=message.photo[-1].file_id)
     await state.set_state(AddCloth_Woman.фото4)
-    await message.answer("Надішліть четверте фото (або натисніть 'Пропустити' для завершення):",reply_markup=skip_photo_kb)
+    await message.answer("Надішліть четверте фото (або натисніть 'Пропустити' для завершення):",reply_markup=kb.skip_photo_kb)
 
 
 @router.message(AddCloth_Woman.фото4, F.photo)
 async def add_photo4(message: Message, state: FSMContext):
     await state.update_data(фото4=message.photo[-1].file_id)
     await state.set_state(AddCloth_Woman.фото5)
-    await message.answer("Надішліть п'яте фото (або натисніть 'Пропустити' для завершення):",reply_markup=skip_photo_kb)
+    await message.answer("Надішліть п'яте фото (або натисніть 'Пропустити' для завершення):",reply_markup=kb.skip_photo_kb)
 
 
 @router.message(AddCloth_Woman.фото5, F.photo)
@@ -354,27 +330,26 @@ async def skip_photo(message: Message, state: FSMContext):
     user_state = await state.get_state()
     if user_state == AddCloth_Man.фото2:
         await state.set_state(AddCloth_Man.фото3)
-        await message.answer("Надішліть третє фото (або натисніть 'Пропустити' для завершення):", reply_markup=skip_photo_kb)
+        await message.answer("Надішліть третє фото (або натисніть 'Пропустити' для завершення):", reply_markup=kb.skip_photo_kb)
     elif user_state == AddCloth_Man.фото3:
         await state.set_state(AddCloth_Man.фото4)
-        await message.answer("Надішліть четверте фото (або натисніть 'Пропустити' для завершення):", reply_markup=skip_photo_kb)
+        await message.answer("Надішліть четверте фото (або натисніть 'Пропустити' для завершення):", reply_markup=kb.skip_photo_kb)
     elif user_state == AddCloth_Man.фото4:
         await state.set_state(AddCloth_Man.фото5)
-        await message.answer("Надішліть п'яте фото (або натисніть 'Пропустити' для завершення):", reply_markup=skip_photo_kb)
+        await message.answer("Надішліть п'яте фото (або натисніть 'Пропустити' для завершення):", reply_markup=kb.skip_photo_kb)
     elif user_state == AddCloth_Man.фото5:
         await state.set_state(AddCloth_Man.tg_link)
         await message.answer("Введіть tg_link продавця:", reply_markup=ReplyKeyboardRemove())
 
     elif user_state == AddCloth_Woman.фото2:
         await state.set_state(AddCloth_Woman.фото3)
-        await message.answer("Надішліть третє фото (або натисніть 'Пропустити' для завершення):", reply_markup=skip_photo_kb)
+        await message.answer("Надішліть третє фото (або натисніть 'Пропустити' для завершення):", reply_markup=kb.skip_photo_kb)
     elif user_state == AddCloth_Woman.фото3:
         await state.set_state(AddCloth_Woman.фото4)
-        await message.answer("Надішліть четверте фото (або натисніть 'Пропустити' для завершення):", reply_markup=skip_photo_kb)
+        await message.answer("Надішліть четверте фото (або натисніть 'Пропустити' для завершення):", reply_markup=kb.skip_photo_kb)
     elif user_state == AddCloth_Woman.фото4:
         await state.set_state(AddCloth_Woman.фото5)
-        await message.answer("Надішліть п'яте фото (або натисніть 'Пропустити' для завершення):", reply_markup=skip_photo_kb)
+        await message.answer("Надішліть п'яте фото (або натисніть 'Пропустити' для завершення):", reply_markup=kb.skip_photo_kb)
     elif user_state == AddCloth_Woman.фото5:
         await state.set_state(AddCloth_Woman.tg_link)
         await message.answer("Введіть tg_link продавця:", reply_markup=ReplyKeyboardRemove())
-

@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, String, Integer, ForeignKey
+from sqlalchemy import String, Integer
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 from aiogram.fsm.state import StatesGroup, State
