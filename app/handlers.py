@@ -1,5 +1,7 @@
 import app.keyboards as kb
-from app.models import async_session, WomanCloth, ManCloth, AddCloth_Man, AddCloth_Woman
+from app.models import (async_session, WomanCloth, ManCloth, AddCloth_Man, AddCloth_Woman,
+                        ManShoes, WomanShoes, AddShoes_Man, AddShoes_Woman)
+
 from aiogram import F, Router
 from aiogram.types import (Message, CallbackQuery,
                            ReplyKeyboardRemove, InputMediaPhoto)
@@ -77,15 +79,38 @@ async def display_item(callback_or_message, item, navigation_kb):
 
 
 @router.callback_query(F.data == 'man')
+async def choose_item_man(callback: CallbackQuery):
+    await callback.message.answer('Оберіть категорію:',reply_markup=kb.choose_item_man)
+
+
+@router.callback_query(F.data == 'man_cloth')
 async def show_men_clothes(callback: CallbackQuery):
     state[callback.from_user.id] = {'type': 'man', 'index': 0}
     await display_next_item(callback)
 
 
+@router.callback_query(F.data == 'man_shoes')
+async def show_men_shoes(callback: CallbackQuery):
+    state[callback.from_user.id] = {'type': 'man_shoes', 'index': 0}
+    await display_next_item(callback)
+
+
+@router.callback_query(F.data == 'woman_shoes')
+async def show_women_shoes(callback: CallbackQuery):
+    state[callback.from_user.id] = {'type': 'woman_shoes', 'index': 0}
+    await display_next_item(callback)
+
+
 @router.callback_query(F.data == 'woman')
+async def choose_item_woman(callback: CallbackQuery):
+    await callback.message.answer('Оберіть категорію:',reply_markup=kb.choose_item_woman)
+
+
+@router.callback_query(F.data == 'woman_cloth')
 async def show_women_clothes(callback: CallbackQuery):
     state[callback.from_user.id] = {'type': 'woman', 'index': 0}
     await display_next_item(callback)
+
 
 
 @router.message(F.text == "Далі➡️")
@@ -112,15 +137,24 @@ async def display_next_item(callback_or_message):
             result = await session.execute(select(ManCloth).order_by(ManCloth.id.desc()).offset(index).limit(1))
             items = result.scalars().all()
             navigation_kb = kb.man_navigation_kb
-        else:
+        elif item_type == 'woman':
             result = await session.execute(select(WomanCloth).order_by(WomanCloth.id.desc()).offset(index).limit(1))
             items = result.scalars().all()
             navigation_kb = kb.woman_navigation_kb
+        elif item_type == 'man_shoes':
+            result = await session.execute(select(ManShoes).order_by(ManShoes.id.desc()).offset(index).limit(1))
+            items = result.scalars().all()
+            navigation_kb = kb.man_shoes_navigation_kb
+        elif item_type == 'woman_shoes':
+            result = await session.execute(select(WomanShoes).order_by(WomanShoes.id.desc()).offset(index).limit(1))
+            items = result.scalars().all()
+            navigation_kb = kb.woman_shoes_navigation_kb
 
         if items:
             await display_item(callback_or_message, items[0], navigation_kb)
         else:
             await callback_or_message.answer("Немає більше товарів у цій категорії.")
+
 
 @router.message(F.text == "Замовити")
 async def order_item(message: Message):
@@ -136,6 +170,32 @@ async def order_item(message: Message):
 
 
 @router.message(F.text == "🌷Замовити🌷")
+async def order_item_woman(message: Message):
+    user_state = state.get(message.from_user.id)
+    if user_state and 'current_item' in user_state:
+        item = user_state['current_item']
+        if hasattr(item, 'tg_link') and item.tg_link:
+            await message.answer(f"Для замовлення цієї речі, зв'яжіться з продавцем: {item.tg_link}")
+        else:
+            await message.answer("На жаль, для цієї речі не вказано контактну інформацію.")
+    else:
+        await message.answer("Не вдалося знайти інформацію про обраний товар.")
+
+
+@router.message(F.text == "Замовити взуття")
+async def order_item(message: Message):
+    user_state = state.get(message.from_user.id)
+    if user_state and 'current_item' in user_state:
+        item = user_state['current_item']
+        if hasattr(item, 'tg_link') and item.tg_link:
+            await message.answer(f"Для замовлення цієї речі, зв'яжіться з продавцем: {item.tg_link}")
+        else:
+            await message.answer("На жаль, для цієї речі не вказано контактну інформацію.")
+    else:
+        await message.answer("Не вдалося знайти інформацію про обраний товар.")
+
+
+@router.message(F.text == "🌷Замовити взуття🌷")
 async def order_item_woman(message: Message):
     user_state = state.get(message.from_user.id)
     if user_state and 'current_item' in user_state:
@@ -170,6 +230,16 @@ async def save_cloth_to_db(state: FSMContext, cloth_model):
 @router.message(Command('add_cloth_to_my_DB'))
 async def add_cloth(message: Message):
     await message.answer("Оберіть стать до якої ви хочете додати річ:",reply_markup=kb.sex_admin)
+
+
+@router.message(F.text == 'add_man_item')
+async def set_state(message: Message):
+    await message.answer("Оберіть категорію:",reply_markup=kb.sex_category_man)
+
+
+@router.message(F.text == 'add_woman_item')
+async def set_state(message: Message):
+    await message.answer("Оберіть категорію:",reply_markup=kb.sex_category_woman)
 
 
 @router.message(F.text == 'add_man_cloth')
@@ -353,3 +423,184 @@ async def skip_photo(message: Message, state: FSMContext):
     elif user_state == AddCloth_Woman.фото5:
         await state.set_state(AddCloth_Woman.tg_link)
         await message.answer("Введіть tg_link продавця:", reply_markup=ReplyKeyboardRemove())
+
+    elif user_state == AddShoes_Man.фото2:
+        await state.set_state(AddShoes_Man.фото3)
+        await message.answer("Надішліть третє фото (або натисніть 'Пропустити' для завершення):", reply_markup=kb.skip_photo_kb)
+    elif user_state == AddShoes_Man.фото3:
+        await state.set_state(AddShoes_Man.фото4)
+        await message.answer("Надішліть четверте фото (або натисніть 'Пропустити' для завершення):", reply_markup=kb.skip_photo_kb)
+    elif user_state == AddShoes_Man.фото4:
+        await state.set_state(AddShoes_Man.фото5)
+        await message.answer("Надішліть п'яте фото (або натисніть 'Пропустити' для завершення):", reply_markup=kb.skip_photo_kb)
+    elif user_state == AddShoes_Man.фото5:
+        await state.set_state(AddShoes_Man.tg_link)
+        await message.answer("Введіть tg_link продавця:", reply_markup=ReplyKeyboardRemove())
+
+    elif user_state == AddShoes_Woman.фото2:
+        await state.set_state(AddShoes_Woman.фото3)
+        await message.answer("Надішліть третє фото (або натисніть 'Пропустити' для завершення):", reply_markup=kb.skip_photo_kb)
+    elif user_state == AddShoes_Woman.фото3:
+        await state.set_state(AddShoes_Woman.фото4)
+        await message.answer("Надішліть четверте фото (або натисніть 'Пропустити' для завершення):", reply_markup=kb.skip_photo_kb)
+    elif user_state == AddShoes_Woman.фото4:
+        await state.set_state(AddShoes_Woman.фото5)
+        await message.answer("Надішліть п'яте фото (або натисніть 'Пропустити' для завершення):", reply_markup=kb.skip_photo_kb)
+    elif user_state == AddShoes_Woman.фото5:
+        await state.set_state(AddShoes_Woman.tg_link)
+        await message.answer("Введіть tg_link продавця:", reply_markup=ReplyKeyboardRemove())
+
+
+
+@router.message(F.text == 'add_man_shoes')
+async def set_state(message: Message, state: FSMContext):
+    await state.set_state(AddShoes_Man.бренд)
+    await message.answer("Введіть назву бренду:")
+
+
+@router.message(AddShoes_Man.бренд)
+async def add_brand(message: Message, state: FSMContext):
+    await state.update_data(бренд=message.text)
+    await state.set_state(AddShoes_Man.розмір)
+    await message.answer("Введіть розмір взуття:")
+
+
+@router.message(AddShoes_Man.розмір)
+async def add_size(message: Message, state: FSMContext):
+    await state.update_data(розмір=message.text)
+    await state.set_state(AddShoes_Man.вартість)
+    await message.answer("Введіть вартість взуття:")
+
+
+@router.message(AddShoes_Man.вартість)
+async def add_cost(message: Message, state: FSMContext):
+    await state.update_data(вартість=message.text)
+    await state.set_state(AddShoes_Man.стан)
+    await message.answer("Введіть стан взуття:")
+
+
+@router.message(AddShoes_Man.стан)
+async def add_cost(message: Message, state: FSMContext):
+    await state.update_data(стан=message.text)
+    await state.set_state(AddShoes_Man.фото1)
+    await message.answer("Надішліть перше фото взуття:")
+
+
+@router.message(AddShoes_Man.фото1, F.photo)
+async def add_photo1(message: Message, state: FSMContext):
+    await state.update_data(фото1=message.photo[-1].file_id)
+    await state.set_state(AddShoes_Man.фото2)
+    await message.answer("Надішліть друге фото (або натисніть 'Пропустити' для завершення):",reply_markup=kb.skip_photo_kb)
+
+
+@router.message(AddShoes_Man.фото2, F.photo)
+async def add_photo2(message: Message, state: FSMContext):
+    await state.update_data(фото2=message.photo[-1].file_id)
+    await state.set_state(AddShoes_Man.фото3)
+    await message.answer("Надішліть третє фото (або натисніть 'Пропустити' для завершення):",reply_markup=kb.skip_photo_kb)
+
+
+@router.message(AddShoes_Man.фото3, F.photo)
+async def add_photo3(message: Message, state: FSMContext):
+    await state.update_data(фото3=message.photo[-1].file_id)
+    await state.set_state(AddShoes_Man.фото4)
+    await message.answer("Надішліть четверте фото (або натисніть 'Пропустити' для завершення):",reply_markup=kb.skip_photo_kb)
+
+
+@router.message(AddShoes_Man.фото4, F.photo)
+async def add_photo4(message: Message, state: FSMContext):
+    await state.update_data(фото4=message.photo[-1].file_id)
+    await state.set_state(AddShoes_Man.фото5)
+    await message.answer("Надішліть п'яте фото (або натисніть 'Пропустити' для завершення):",reply_markup=kb.skip_photo_kb)
+
+
+@router.message(AddShoes_Man.фото5, F.photo)
+async def add_photo5(message: Message, state: FSMContext):
+    await state.update_data(фото5=message.photo[-1].file_id)
+    await state.set_state(AddShoes_Man.tg_link)
+    await message.answer("Введіть tg_link продавця:",reply_markup=ReplyKeyboardRemove())
+
+
+@router.message(AddShoes_Man.tg_link)
+async def add_tg_link(message: Message, state: FSMContext):
+    await state.update_data(tg_link=message.text)
+    await save_cloth_to_db(state, ManShoes)
+    await state.clear()
+    await message.answer("Чоловіче взуття успішно додано до бази даних.", reply_markup=kb.menu)
+
+
+@router.message(F.text == 'add_woman_shoes')
+async def set_state(message: Message, state: FSMContext):
+    await state.set_state(AddShoes_Woman.бренд)
+    await message.answer("Введіть назву бренду:")
+
+
+@router.message(AddShoes_Woman.бренд)
+async def add_brand(message: Message, state: FSMContext):
+    await state.update_data(бренд=message.text)
+    await state.set_state(AddShoes_Woman.розмір)
+    await message.answer("Введіть розмір взуття:")
+
+
+@router.message(AddShoes_Woman.розмір)
+async def add_size(message: Message, state: FSMContext):
+    await state.update_data(розмір=message.text)
+    await state.set_state(AddShoes_Woman.вартість)
+    await message.answer("Введіть вартість взуття:")
+
+
+@router.message(AddShoes_Woman.вартість)
+async def add_cost(message: Message, state: FSMContext):
+    await state.update_data(вартість=message.text)
+    await state.set_state(AddShoes_Woman.стан)
+    await message.answer("Введіть стан взуття:")
+
+
+@router.message(AddShoes_Woman.стан)
+async def add_cost(message: Message, state: FSMContext):
+    await state.update_data(стан=message.text)
+    await state.set_state(AddShoes_Woman.фото1)
+    await message.answer("Надішліть перше фото одягу:")
+
+
+@router.message(AddShoes_Woman.фото1, F.photo)
+async def add_photo1(message: Message, state: FSMContext):
+    await state.update_data(фото1=message.photo[-1].file_id)
+    await state.set_state(AddShoes_Woman.фото2)
+    await message.answer("Надішліть друге фото (або натисніть 'Пропустити' для завершення):",reply_markup=kb.skip_photo_kb)
+
+
+@router.message(AddShoes_Woman.фото2, F.photo)
+async def add_photo2(message: Message, state: FSMContext):
+    await state.update_data(фото2=message.photo[-1].file_id)
+    await state.set_state(AddShoes_Woman.фото3)
+    await message.answer("Надішліть третє фото (або натисніть 'Пропустити' для завершення):",reply_markup=kb.skip_photo_kb)
+
+
+@router.message(AddShoes_Woman.фото3, F.photo)
+async def add_photo3(message: Message, state: FSMContext):
+    await state.update_data(фото3=message.photo[-1].file_id)
+    await state.set_state(AddShoes_Woman.фото4)
+    await message.answer("Надішліть четверте фото (або натисніть 'Пропустити' для завершення):",reply_markup=kb.skip_photo_kb)
+
+
+@router.message(AddShoes_Woman.фото4, F.photo)
+async def add_photo4(message: Message, state: FSMContext):
+    await state.update_data(фото4=message.photo[-1].file_id)
+    await state.set_state(AddShoes_Woman.фото5)
+    await message.answer("Надішліть п'яте фото (або натисніть 'Пропустити' для завершення):",reply_markup=kb.skip_photo_kb)
+
+
+@router.message(AddShoes_Woman.фото5, F.photo)
+async def add_photo5(message: Message, state: FSMContext):
+    await state.update_data(фото5=message.photo[-1].file_id)
+    await state.set_state(AddShoes_Woman.tg_link)
+    await message.answer("Введіть tg_link продавця:",reply_markup=ReplyKeyboardRemove())
+
+
+@router.message(AddShoes_Woman.tg_link)
+async def add_tg_link(message: Message, state: FSMContext):
+    await state.update_data(tg_link=message.text)
+    await save_cloth_to_db(state, WomanShoes)
+    await state.clear()
+    await message.answer("Жіноче взуття успішно додано до бази даних.", reply_markup=kb.menu)

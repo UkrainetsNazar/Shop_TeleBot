@@ -32,6 +32,32 @@ class AddCloth_Woman(StatesGroup):
     фото5 = State()
     tg_link = State()
 
+class AddShoes_Man(StatesGroup):
+    бренд = State()
+    розмір = State()
+    вартість = State()
+    стан = State()
+    фото1 = State()
+    фото2 = State()
+    фото3 = State()
+    фото4 = State()
+    фото5 = State()
+    tg_link = State()
+
+
+class AddShoes_Woman(StatesGroup):
+    бренд = State()
+    розмір = State()
+    вартість = State()
+    стан = State()
+    фото1 = State()
+    фото2 = State()
+    фото3 = State()
+    фото4 = State()
+    фото5 = State()
+    tg_link = State()
+
+
 class Base(AsyncAttrs, DeclarativeBase):
     pass
 
@@ -67,6 +93,37 @@ class WomanCloth(Base):
     фото5: Mapped[str] = mapped_column(String, nullable=True)
     tg_link: Mapped[str] = mapped_column(String, nullable=False)
 
+
+class ManShoes(Base):
+    __tablename__ = 'чоловіче_взуття'
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    бренд: Mapped[str] = mapped_column(String, nullable=False)
+    розмір: Mapped[str] = mapped_column(String, nullable=False)
+    вартість: Mapped[int] = mapped_column(Integer, nullable=False)
+    стан: Mapped[int] = mapped_column(Integer, nullable=False)
+    фото1: Mapped[str] = mapped_column(String, nullable=True)
+    фото2: Mapped[str] = mapped_column(String, nullable=True)
+    фото3: Mapped[str] = mapped_column(String, nullable=True)
+    фото4: Mapped[str] = mapped_column(String, nullable=True)
+    фото5: Mapped[str] = mapped_column(String, nullable=True)
+    tg_link: Mapped[str] = mapped_column(String, nullable=False)  # For button Замовити
+
+
+class WomanShoes(Base):
+    __tablename__ = 'жіноче_взуття'
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    бренд: Mapped[str] = mapped_column(String, nullable=False)
+    розмір: Mapped[str] = mapped_column(String, nullable=False)
+    вартість: Mapped[int] = mapped_column(Integer, nullable=False)
+    стан: Mapped[int] = mapped_column(Integer, nullable=False)
+    фото1: Mapped[str] = mapped_column(String, nullable=True)
+    фото2: Mapped[str] = mapped_column(String, nullable=True)
+    фото3: Mapped[str] = mapped_column(String, nullable=True)
+    фото4: Mapped[str] = mapped_column(String, nullable=True)
+    фото5: Mapped[str] = mapped_column(String, nullable=True)
+    tg_link: Mapped[str] = mapped_column(String, nullable=False)
 
 async def async_main():
     async with engine.begin() as conn:
