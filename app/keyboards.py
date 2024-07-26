@@ -40,21 +40,17 @@ skip_photo_kb = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
-man_shoes_navigation_kb = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [InlineKeyboardButton(text="Далі➡️", callback_data="next_man_shoes")],
-        [InlineKeyboardButton(text="Назад", callback_data="Назад")],
-        [InlineKeyboardButton(text="Замовити взуття", callback_data="order_man_shoes")],
-    ]
-)
+man_shoes_navigation_kb = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="Замовити взуття👟"),
+                                                         KeyboardButton(text="👟Далі➡️")],
+                                                        [KeyboardButton(text="Назад")]],
+                                              resize_keyboard=True,
+                                              input_field_placeholder='Листайте каталог за допомогою стрілочок...')
 
-woman_shoes_navigation_kb = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [InlineKeyboardButton(text="🌷Далі➡️", callback_data="next_woman_shoes")],
-        [InlineKeyboardButton(text="Назад", callback_data="Назад")],
-        [InlineKeyboardButton(text="🌷Замовити взуття🌷", callback_data="order_woman_shoes")],
-    ]
-)
+woman_shoes_navigation_kb = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="Замовити взуття👠"),
+                                                           KeyboardButton(text="👠Далі➡️")],
+                                                          [KeyboardButton(text="Назад")]],
+                                                resize_keyboard=True,
+                                                input_field_placeholder='Листайте каталог за допомогою стрілочок...')
 
 sex_admin = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='add_man_item'),
                                            KeyboardButton(text='add_woman_item')]], resize_keyboard=True)

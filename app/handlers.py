@@ -127,6 +127,21 @@ async def next_item_woman(message: Message):
         await display_next_item(message)
 
 
+@router.message(F.text == "👟Далі➡️")
+async def next_item(message: Message):
+    if message.from_user.id in state:
+        state[message.from_user.id]['index'] += 1
+        await display_next_item(message)
+
+
+@router.message(F.text == "👠Далі➡️")
+async def next_item_woman(message: Message):
+    if message.from_user.id in state:
+        state[message.from_user.id]['index'] += 1
+        await display_next_item(message)
+
+
+
 async def display_next_item(callback_or_message):
     user_state = state[callback_or_message.from_user.id]
     index = user_state['index']
@@ -182,7 +197,7 @@ async def order_item_woman(message: Message):
         await message.answer("Не вдалося знайти інформацію про обраний товар.")
 
 
-@router.message(F.text == "Замовити взуття")
+@router.message(F.text == "Замовити взуття👟")
 async def order_item(message: Message):
     user_state = state.get(message.from_user.id)
     if user_state and 'current_item' in user_state:
@@ -195,7 +210,7 @@ async def order_item(message: Message):
         await message.answer("Не вдалося знайти інформацію про обраний товар.")
 
 
-@router.message(F.text == "🌷Замовити взуття🌷")
+@router.message(F.text == "Замовити взуття👠")
 async def order_item_woman(message: Message):
     user_state = state.get(message.from_user.id)
     if user_state and 'current_item' in user_state:
