@@ -1,13 +1,12 @@
 import asyncio
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
-
 from app.handlers import router
 from app.models import async_main
 
 async def main():
     await async_main()
-    bot = Bot('7483642726:AAFWlxEhOWbsnsNpqgZLzptgo5wvbvD7gTM')
+    bot = Bot('7381042825:AAGaVTFtV-xHNDdoVe3_GgRC55eIWVBIGCI')
     storage = MemoryStorage()
     dp = Dispatcher(storage=storage)
     dp.include_router(router)
