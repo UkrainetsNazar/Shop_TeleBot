@@ -24,15 +24,19 @@ choose_item_woman = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='️🌷Взуття🌷', callback_data='woman_shoes'),
      InlineKeyboardButton(text='🌷Одяг🌷', callback_data='woman_cloth')]])
 
-man_navigation_kb = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="Замовити"), KeyboardButton(text="Далі➡️")],
+man_navigation_kb = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="⬅️Попереднє"),
+                                                   KeyboardButton(text="Далі➡️")],
+                                                  [KeyboardButton(text="Замовити")],
                                                   [KeyboardButton(text="Назад")]],
                                         resize_keyboard=True,
                                         input_field_placeholder='Листайте каталог за допомогою стрілочок...')
 
-woman_navigation_kb = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="🌷Замовити🌷"), KeyboardButton(text="🌷Далі➡️")],
-                                                    [KeyboardButton(text="Назад")]],
-                                          resize_keyboard=True,
-                                          input_field_placeholder='Листайте каталог за допомогою стрілочок...')
+woman_navigation_kb = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="⬅️Попереднє🌷"),
+                                                                        KeyboardButton(text="🌷Далі➡️")],
+                                                                       [KeyboardButton(text="🌷Замовити🌷")],
+                                                                       [KeyboardButton(text="Назад")]],
+                                                             resize_keyboard=True,
+                                                             input_field_placeholder='Листайте каталог за допомогою стрілочок...')
 
 
 skip_photo_kb = ReplyKeyboardMarkup(
@@ -40,14 +44,16 @@ skip_photo_kb = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
-man_shoes_navigation_kb = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="Замовити взуття👟"),
+man_shoes_navigation_kb = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="⬅️Попереднє👟"),
                                                          KeyboardButton(text="👟Далі➡️")],
+                                                        [KeyboardButton(text="Замовити взуття👟")],
                                                         [KeyboardButton(text="Назад")]],
                                               resize_keyboard=True,
                                               input_field_placeholder='Листайте каталог за допомогою стрілочок...')
 
-woman_shoes_navigation_kb = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="Замовити взуття👠"),
+woman_shoes_navigation_kb = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="⬅️Попереднє👠"),
                                                            KeyboardButton(text="👠Далі➡️")],
+                                                          [KeyboardButton(text="Замовити взуття👠")],
                                                           [KeyboardButton(text="Назад")]],
                                                 resize_keyboard=True,
                                                 input_field_placeholder='Листайте каталог за допомогою стрілочок...')

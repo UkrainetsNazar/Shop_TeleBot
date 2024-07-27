@@ -12,6 +12,18 @@ router = Router()
 state = {}
 
 
+def get_navigation_kb(item_type):
+    if item_type == 'man':
+        return kb.man_navigation_kb
+    elif item_type == 'woman':
+        return kb.woman_navigation_kb
+    elif item_type == 'man_shoes':
+        return kb.man_shoes_navigation_kb
+    elif item_type == 'woman_shoes':
+        return kb.woman_shoes_navigation_kb
+    return kb.menu
+
+
 @router.message(CommandStart())
 async def cmd_start(message: Message):
     await message.answer('Вітаємо Вас у нашому магазині <b>SecondWave Wear</b>🌊\n\n '
@@ -78,6 +90,34 @@ async def display_item(callback_or_message, item, navigation_kb):
         await callback_or_message.answer("Обирайте наступні дії:", reply_markup=navigation_kb)
 
 
+async def display_next_item(callback_or_message):
+    user_state = state[callback_or_message.from_user.id]
+    index = user_state['index']
+    item_type = user_state['type']
+
+    async with async_session() as session:
+        if item_type == 'man':
+            result = await session.execute(select(ManCloth).order_by(ManCloth.id.desc()).offset(index).limit(1))
+            items = result.scalars().all()
+            navigation_kb = kb.man_navigation_kb
+        elif item_type == 'woman':
+            result = await session.execute(select(WomanCloth).order_by(WomanCloth.id.desc()).offset(index).limit(1))
+            items = result.scalars().all()
+            navigation_kb = kb.woman_navigation_kb
+        elif item_type == 'man_shoes':
+            result = await session.execute(select(ManShoes).order_by(ManShoes.id.desc()).offset(index).limit(1))
+            items = result.scalars().all()
+            navigation_kb = kb.man_shoes_navigation_kb
+        elif item_type == 'woman_shoes':
+            result = await session.execute(select(WomanShoes).order_by(WomanShoes.id.desc()).offset(index).limit(1))
+            items = result.scalars().all()
+            navigation_kb = kb.woman_shoes_navigation_kb
+
+        if items:
+            await display_item(callback_or_message, items[0], navigation_kb)
+        else:
+            await callback_or_message.answer("Більше елементів немає.", reply_markup=navigation_kb)
+
 @router.callback_query(F.data == 'man')
 async def choose_item_man(callback: CallbackQuery):
     await callback.message.answer('Оберіть категорію:',reply_markup=kb.choose_item_man)
@@ -141,34 +181,48 @@ async def next_item_woman(message: Message):
         await display_next_item(message)
 
 
-
-async def display_next_item(callback_or_message):
-    user_state = state[callback_or_message.from_user.id]
-    index = user_state['index']
-    item_type = user_state['type']
-
-    async with async_session() as session:
-        if item_type == 'man':
-            result = await session.execute(select(ManCloth).order_by(ManCloth.id.desc()).offset(index).limit(1))
-            items = result.scalars().all()
-            navigation_kb = kb.man_navigation_kb
-        elif item_type == 'woman':
-            result = await session.execute(select(WomanCloth).order_by(WomanCloth.id.desc()).offset(index).limit(1))
-            items = result.scalars().all()
-            navigation_kb = kb.woman_navigation_kb
-        elif item_type == 'man_shoes':
-            result = await session.execute(select(ManShoes).order_by(ManShoes.id.desc()).offset(index).limit(1))
-            items = result.scalars().all()
-            navigation_kb = kb.man_shoes_navigation_kb
-        elif item_type == 'woman_shoes':
-            result = await session.execute(select(WomanShoes).order_by(WomanShoes.id.desc()).offset(index).limit(1))
-            items = result.scalars().all()
-            navigation_kb = kb.woman_shoes_navigation_kb
-
-        if items:
-            await display_item(callback_or_message, items[0], navigation_kb)
+@router.message(F.text == "⬅️Попереднє")
+async def prev_item(message: Message):
+    if message.from_user.id in state:
+        user_state = state[message.from_user.id]
+        if user_state['index'] > 0:
+            user_state['index'] -= 1
+            await display_next_item(message)
         else:
-            await callback_or_message.answer("Немає більше товарів у цій категорії.")
+            await message.answer("Це перший елемент. Немає попередніх.", reply_markup=get_navigation_kb(user_state['type']))
+
+
+@router.message(F.text == "⬅️Попереднє🌷")
+async def prev_item_woman(message: Message):
+    if message.from_user.id in state:
+        user_state = state[message.from_user.id]
+        if user_state['index'] > 0:
+            user_state['index'] -= 1
+            await display_next_item(message)
+        else:
+            await message.answer("Це перший елемент. Немає попередніх.", reply_markup=get_navigation_kb(user_state['type']))
+
+
+@router.message(F.text == "⬅️Попереднє👟")
+async def prev_item_shoes(message: Message):
+    if message.from_user.id in state:
+        user_state = state[message.from_user.id]
+        if user_state['index'] > 0:
+            user_state['index'] -= 1
+            await display_next_item(message)
+        else:
+            await message.answer("Це перший елемент. Немає попередніх.", reply_markup=get_navigation_kb(user_state['type']))
+
+
+@router.message(F.text == "⬅️Попереднє👠")
+async def prev_item_woman_shoes(message: Message):
+    if message.from_user.id in state:
+        user_state = state[message.from_user.id]
+        if user_state['index'] > 0:
+            user_state['index'] -= 1
+            await display_next_item(message)
+        else:
+            await message.answer("Це перший елемент. Немає попередніх.", reply_markup=get_navigation_kb(user_state['type']))
 
 
 @router.message(F.text == "Замовити")
